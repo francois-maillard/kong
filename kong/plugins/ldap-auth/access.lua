@@ -165,7 +165,14 @@ local function do_authentication(conf)
 
   -- If both headers are missing, return 401
   if not (authorization_value or proxy_authorization_value) then
-    ngx.header["WWW-Authenticate"] = 'LDAP realm="kong"'
+    local scheme = conf.header_type
+    if scheme == "ldap" then
+      -- ensure backwards compatibility (see GH PR #3656)
+      -- TODO: provide migration to capitalize older configurations
+      scheme = upper(scheme)
+    end
+
+    ngx.header["WWW-Authenticate"] = scheme .. ' realm="kong"'
     return false, {status = 401}
   end
 
